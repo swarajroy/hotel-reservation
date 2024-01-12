@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/gofiber/fiber/v2/log"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -33,13 +34,14 @@ func (params CreateUserParams) Validate() map[string]string {
 	if len(params.LastName) < minLenLastname {
 		errors["lastName"] = fmt.Sprintf("lastName should be atleast %d characters", minLenLastname)
 	}
-	if len(params.Email) < minLenPassword {
+	if len(params.Password) < minLenPassword {
 		errors["password"] = fmt.Sprintf("password should be atleast %d characters", minLenPassword)
 	}
 	if !isEmailValid(params.Email) {
-		errors["email"] = fmt.Sprintf("email %s is invalid", params.Email)
+		errors["email"] = fmt.Sprintf("email is invalid")
 	}
 	log.Info("exit Validate()")
+	log.Info("errors = ", errors)
 	return errors
 }
 
@@ -49,7 +51,7 @@ func isEmailValid(e string) bool {
 }
 
 func NewUserFromParams(params CreateUserParams) (*User, error) {
-	log.Info("enter NewUserFromParams")
+	log.Info("enter NewUserFromParams", params)
 	encpw, err := bcrypt.GenerateFromPassword([]byte(params.Password), BCRYPT_COST)
 	if err != nil {
 		return nil, err
@@ -70,10 +72,9 @@ type User struct {
 	EncryptedPassword string             `bson:"encryptedPassword" json:"-"`
 }
 
-/* type UpdateUserParams struct {
+type UpdateUserParams struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
-	Email     string `json:"email"`
 }
 
 func (params UpdateUserParams) ToBSON() bson.M {
@@ -86,4 +87,4 @@ func (params UpdateUserParams) ToBSON() bson.M {
 		m["lastName"] = params.LastName
 	}
 	return m
-} */
+}

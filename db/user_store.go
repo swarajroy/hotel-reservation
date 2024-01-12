@@ -19,7 +19,7 @@ type UserStore interface {
 	GetUsers(context.Context) ([]*types.User, error)
 	InsertUser(context.Context, *types.User) (*types.User, error)
 	DeleteUserById(context.Context, string) error
-	//UpdateUserById(context.Context, types.UpdateUserParams, string) error
+	UpdateUserById(ctx context.Context, params types.UpdateUserParams, id string) error
 }
 
 type MongoDbUserStore struct {
@@ -48,12 +48,12 @@ func (s *MongoDbUserStore) DeleteUserById(ctx context.Context, id string) error 
 }
 
 func (s *MongoDbUserStore) InsertUser(ctx context.Context, user *types.User) (*types.User, error) {
-	log.Info("Enter InsertUser user = ", &user)
+	log.Info("Enter InsertUser user = ", user)
 	res, err := s.userColl.InsertOne(ctx, user)
 	if err != nil {
 		return nil, err
 	}
-	log.Info("Inserted User = ", &res)
+	log.Info("Inserted User = ", res)
 	user.ID = res.InsertedID.(primitive.ObjectID)
 	return user, nil
 }
@@ -84,14 +84,21 @@ func (s *MongoDbUserStore) GetUserById(ctx context.Context, id string) (*types.U
 	return &user, nil
 }
 
-/* func (s *MongoDbUserStore) UpdateUserById(ctx context.Context, params types.UpdateUserParams, id string) error {
+func (s *MongoDbUserStore) UpdateUserById(ctx context.Context, params types.UpdateUserParams, id string) error {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
-	update := params.ToBSON()
-	if _, err := s.userColl.UpdateByID(ctx, bson.M{"_id": oid}, update); err != nil {
+	filter := bson.M{
+		"_id": oid,
+	}
+	update := bson.D{
+		{
+			"$set", params.ToBSON(),
+		},
+	}
+	if _, err := s.userColl.UpdateOne(ctx, filter, update); err != nil {
 		return err
 	}
 	return nil
-} */
+}

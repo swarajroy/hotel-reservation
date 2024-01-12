@@ -32,21 +32,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	/* coll := client.Database(db.DBNAME).Collection(db.USER_COLL)
-
-	user := types.User{
-		FirstName:         "Swaraj",
-		LastName:          "Roy",
-		Email:             "swaraj.roy@dataranx.com",
-		EncryptedPassword: "somepass",
-	}
-
-	_, err = coll.InsertOne(ctx, user)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	*/
 	listenAddr := flag.String("listenAddr", ":3000", "The API Servers port")
 	flag.Parse()
 	app := fiber.New(config)
@@ -59,7 +44,7 @@ func main() {
 	apiv1.Get("/users/:id", userHandler.HandleGetUser)
 	apiv1.Post("/users", userHandler.HandlePostUser)
 	apiv1.Delete("/users/:id", userHandler.HandleDeleteUser)
-	//apiv1.Put("/users/:id", userHandler.HandlePutUser)
+	apiv1.Put("/users/:id", userHandler.HandlePutUser)
 
 	app.Listen(*listenAddr)
 }

@@ -51,12 +51,11 @@ func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	errors := params.Validate()
-
-	if errors != nil {
+	if errors := params.Validate(); len(errors) > 0 {
 		return c.JSON(errors)
 	}
 
+	log.Info("Before NewUserFromParams")
 	user, err := types.NewUserFromParams(params)
 	log.Info("user = ", &user)
 	if err != nil {
@@ -80,7 +79,7 @@ func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
 	return c.JSON(map[string]string{"Deleted": userID})
 }
 
-/* func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
+func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 	var params types.UpdateUserParams
 	userID := c.Params("id")
 
@@ -92,4 +91,4 @@ func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(map[string]string{"Updated": userID})
-} */
+}
