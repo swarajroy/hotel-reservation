@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	//DB_URI = "mongodb+srv://flashcardsage:VCB36qjOQwfsfpqY@cluster0.agr8mpl.mongodb.net/?retryWrites=true&w=majority"
 	DB_URI = "mongodb://127.0.0.1:27017"
 )
 
@@ -38,7 +37,7 @@ func main() {
 
 	apiv1 := app.Group("/api/v1")
 
-	userHandler := api.NewUserHandler(db.NewMongoDbUserStore(client))
+	userHandler := api.NewUserHandler(db.NewMongoDbUserStore(client, db.DBNAME))
 
 	apiv1.Get("/users", userHandler.HandleGetUsers)
 	apiv1.Get("/users/:id", userHandler.HandleGetUser)
