@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/swarajroy/hotel-reservation/types"
@@ -14,7 +15,12 @@ const (
 	USER_COLL = "users"
 )
 
+type Dropper interface {
+	Drop(context.Context) error
+}
+
 type UserStore interface {
+	Dropper
 	GetUserById(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
 	InsertUser(context.Context, *types.User) (*types.User, error)
@@ -27,10 +33,15 @@ type MongoDbUserStore struct {
 	userColl *mongo.Collection
 }
 
-func NewMongoDbUserStore(client *mongo.Client) *MongoDbUserStore {
+func (s *MongoDbUserStore) Drop(ctx context.Context) error {
+	fmt.Println("--- dropping user collection ---")
+	return s.userColl.Drop(ctx)
+}
+
+func NewMongoDbUserStore(client *mongo.Client, dbname string) *MongoDbUserStore {
 	return &MongoDbUserStore{
 		client:   client,
-		userColl: client.Database(DBNAME).Collection(USER_COLL),
+		userColl: client.Database(dbname).Collection(USER_COLL),
 	}
 }
 
