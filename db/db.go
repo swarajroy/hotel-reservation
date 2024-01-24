@@ -1,17 +1,13 @@
 package db
 
-import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
 const (
-	DBNAME = "hotel-reservation"
+	DBNAME       = "hotel-reservation"
+	TEST_DB_NAME = "hotel-reservation-test"
+	DB_URI       = "mongodb://127.0.0.1:27017"
 )
 
-func ToObjectID(id string) primitive.ObjectID {
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		panic(err)
-	}
-	return oid
+type HotelReservationStore struct {
+	User  UserStore
+	Hotel HotelStore
+	Room  RoomStore
 }

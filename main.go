@@ -12,10 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	DB_URI = "mongodb://127.0.0.1:27017"
-)
-
 var config = fiber.Config{
 	ErrorHandler: func(c *fiber.Ctx, err error) error {
 		return c.JSON(map[string]string{"error": err.Error()})
@@ -26,7 +22,7 @@ func main() {
 
 	ctx := context.Background()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(DB_URI))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(db.DB_URI))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,13 +33,27 @@ func main() {
 
 	apiv1 := app.Group("/api/v1")
 
-	userHandler := api.NewUserHandler(db.NewMongoDbUserStore(client, db.DBNAME))
+	var (
+		userStore  = db.NewMongoDbUserStore(client, db.DBNAME)
+		hotelStore = db.NewMongoDbHotelStore(client, db.DBNAME)
+		roomStore  = db.NewMongoDbRoomStore(client, db.DBNAME, hotelStore)
+		store      = &db.HotelReservationStore{
+			User:  userStore,
+			Hotel: hotelStore,
+			Room:  roomStore,
+		}
+		userHandler  = api.NewUserHandler(store)
+		hotelHandler = api.NewHotelHandler(store)
+	)
 
 	apiv1.Get("/users", userHandler.HandleGetUsers)
 	apiv1.Get("/users/:id", userHandler.HandleGetUser)
 	apiv1.Post("/users", userHandler.HandlePostUser)
 	apiv1.Delete("/users/:id", userHandler.HandleDeleteUser)
 	apiv1.Put("/users/:id", userHandler.HandlePutUser)
+
+	apiv1.Get("/hotels", hotelHandler.HandleGetHotels)
+	apiv1.Get("/hotels/:id/rooms", hotelHandler.HandleGetRooms)
 
 	app.Listen(*listenAddr)
 }
