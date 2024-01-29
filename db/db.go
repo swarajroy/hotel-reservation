@@ -11,3 +11,11 @@ type HotelReservationStore struct {
 	Hotel HotelStore
 	Room  RoomStore
 }
+
+func NewHotelReservationStore(user UserStore, hotel HotelStore, room RoomStore) *HotelReservationStore {
+	return &HotelReservationStore{
+		User:  user,
+		Hotel: hotel,
+		Room:  room,
+	}
+}

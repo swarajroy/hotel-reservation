@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/swarajroy/hotel-reservation/api"
+	"github.com/swarajroy/hotel-reservation/api/middleware"
 	"github.com/swarajroy/hotel-reservation/db"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -29,9 +30,6 @@ func main() {
 
 	listenAddr := flag.String("listenAddr", ":3000", "The API Servers port")
 	flag.Parse()
-	app := fiber.New(config)
-
-	apiv1 := app.Group("/api/v1")
 
 	var (
 		userStore  = db.NewMongoDbUserStore(client, db.DBNAME)
@@ -44,8 +42,13 @@ func main() {
 		}
 		userHandler  = api.NewUserHandler(store)
 		hotelHandler = api.NewHotelHandler(store)
+		authHandler  = api.NewAuthHandler(store)
+		app          = fiber.New(config)
+		apiauth      = app.Group("/api")
+		apiv1        = app.Group("/api/v1", middleware.JWTAuthentication)
 	)
 
+	apiauth.Post("/auth", authHandler.HandleAuth)
 	apiv1.Get("/users", userHandler.HandleGetUsers)
 	apiv1.Get("/users/:id", userHandler.HandleGetUser)
 	apiv1.Post("/users", userHandler.HandlePostUser)
