@@ -11,12 +11,12 @@ import (
 )
 
 type UserHandler struct {
-	userStore db.UserStore
+	store *db.HotelReservationStore
 }
 
-func NewUserHandler(userStore db.UserStore) *UserHandler {
+func NewUserHandler(store *db.HotelReservationStore) *UserHandler {
 	return &UserHandler{
-		userStore: userStore,
+		store: store,
 	}
 }
 
@@ -24,7 +24,7 @@ func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 	var (
 		id = c.Params("id")
 	)
-	user, err := h.userStore.GetUserById(c.Context(), id)
+	user, err := h.store.User.GetUserById(c.Context(), id)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return c.JSON(map[string]string{"error": "not found!"})
@@ -36,7 +36,7 @@ func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 
 func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
 	log.Info("Enter HandleGetUsers")
-	users, err := h.userStore.GetUsers(c.Context())
+	users, err := h.store.User.GetUsers(c.Context())
 	if err != nil {
 		log.Error("error occurred")
 		return err
@@ -62,7 +62,7 @@ func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	insertedUser, err := h.userStore.InsertUser(c.Context(), user)
+	insertedUser, err := h.store.User.InsertUser(c.Context(), user)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 
 func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
 	userID := c.Params("id")
-	if err := h.userStore.DeleteUserById(c.Context(), userID); err != nil {
+	if err := h.store.User.DeleteUserById(c.Context(), userID); err != nil {
 		return err
 	}
 	return c.JSON(map[string]string{"Deleted": userID})
@@ -87,7 +87,7 @@ func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := h.userStore.UpdateUserById(c.Context(), params, userID); err != nil {
+	if err := h.store.User.UpdateUserById(c.Context(), params, userID); err != nil {
 		return err
 	}
 	return c.JSON(map[string]string{"Updated": userID})

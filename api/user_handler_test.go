@@ -14,29 +14,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	TEST_DB_URI  = "mongodb://localhost:27017"
-	TEST_DB_NAME = "hotel-reservation-test"
-)
-
 type testdb struct {
-	db.UserStore
+	store *db.HotelReservationStore
 }
 
 func Setup(t *testing.T, ctx context.Context) *testdb {
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(TEST_DB_URI))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(db.DB_URI))
 	if err != nil {
 		t.Fatal(err)
 	}
+	userStore := db.NewMongoDbUserStore(client, db.TEST_DB_NAME)
 	return &testdb{
-		UserStore: db.NewMongoDbUserStore(client, TEST_DB_NAME),
+		store: &db.HotelReservationStore{
+			User: userStore,
+		},
 	}
 
 }
 
 func (tdb *testdb) TearDown(t *testing.T, ctx context.Context) {
-	if err := tdb.UserStore.Drop(ctx); err != nil {
+	if err := tdb.store.User.Drop(ctx); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -48,7 +46,7 @@ func TestPostUser(t *testing.T) {
 	defer tdb.TearDown(t, ctx)
 
 	app := fiber.New()
-	userHandler := NewUserHandler(tdb.UserStore)
+	userHandler := NewUserHandler(tdb.store)
 	app.Post(POST_ROUTE, userHandler.HandlePostUser)
 
 	params := types.CreateUserParams{

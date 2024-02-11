@@ -38,7 +38,7 @@ func (params CreateUserParams) Validate() map[string]string {
 		errors["password"] = fmt.Sprintf("password should be atleast %d characters", minLenPassword)
 	}
 	if !isEmailValid(params.Email) {
-		errors["email"] = fmt.Sprintf("email is invalid")
+		errors["email"] = fmt.Sprintf("email %s is invalid", params.Email)
 	}
 	log.Info("exit Validate()")
 	log.Info("errors = ", errors)
@@ -70,6 +70,7 @@ type User struct {
 	LastName          string             `bson:"lastName" json:"lastName"`
 	Email             string             `bson:"email" json:"email"`
 	EncryptedPassword string             `bson:"encryptedPassword" json:"-"`
+	IsAdmin           bool               `bson:"isAdmin" json:"isAdmin"`
 }
 
 type UpdateUserParams struct {
@@ -87,4 +88,8 @@ func (params UpdateUserParams) ToBSON() bson.M {
 		m["lastName"] = params.LastName
 	}
 	return m
+}
+
+func IsValisPassword(encpw, pw string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(encpw), []byte(pw)) == nil
 }
