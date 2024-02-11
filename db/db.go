@@ -7,15 +7,17 @@ const (
 )
 
 type HotelReservationStore struct {
-	User  UserStore
-	Hotel HotelStore
-	Room  RoomStore
+	User    UserStore
+	Hotel   HotelStore
+	Room    RoomStore
+	Booking BookingStore
 }
 
-func NewHotelReservationStore(user UserStore, hotel HotelStore, room RoomStore) *HotelReservationStore {
+func NewHotelReservationStore(user UserStore, hotel HotelStore, room RoomStore, booking BookingStore) *HotelReservationStore {
 	return &HotelReservationStore{
-		User:  user,
-		Hotel: hotel,
-		Room:  room,
+		User:    user,
+		Hotel:   hotel,
+		Room:    room,
+		Booking: booking,
 	}
 }

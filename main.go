@@ -32,31 +32,47 @@ func main() {
 	flag.Parse()
 
 	var (
-		userStore  = db.NewMongoDbUserStore(client, db.DBNAME)
-		hotelStore = db.NewMongoDbHotelStore(client, db.DBNAME)
-		roomStore  = db.NewMongoDbRoomStore(client, db.DBNAME, hotelStore)
-		store      = &db.HotelReservationStore{
-			User:  userStore,
-			Hotel: hotelStore,
-			Room:  roomStore,
+		userStore    = db.NewMongoDbUserStore(client, db.DBNAME)
+		hotelStore   = db.NewMongoDbHotelStore(client, db.DBNAME)
+		roomStore    = db.NewMongoDbRoomStore(client, db.DBNAME, hotelStore)
+		bookingStore = db.NewMongoDbBookinglStore(client, db.DBNAME)
+		store        = &db.HotelReservationStore{
+			User:    userStore,
+			Hotel:   hotelStore,
+			Room:    roomStore,
+			Booking: bookingStore,
 		}
-		userHandler  = api.NewUserHandler(store)
-		hotelHandler = api.NewHotelHandler(store)
-		authHandler  = api.NewAuthHandler(store)
-		app          = fiber.New(config)
-		apiauth      = app.Group("/api")
-		apiv1        = app.Group("/api/v1", middleware.JWTAuthentication)
+		userHandler    = api.NewUserHandler(store)
+		hotelHandler   = api.NewHotelHandler(store)
+		roomHandler    = api.NewRoomHandler(store)
+		authHandler    = api.NewAuthHandler(store)
+		bookingHandler = api.NewBookingHandler(store)
+		app            = fiber.New(config)
+		auth           = app.Group("/api")
+		apiv1          = app.Group("/api/v1", middleware.JWTAuthentication(*store))
+		admin          = apiv1.Group("/admin", middleware.AdminAuth)
 	)
 
-	apiauth.Post("/auth", authHandler.HandleAuth)
+	// auth handlers
+	auth.Post("/auth", authHandler.HandleAuth)
+	// user handlers
 	apiv1.Get("/users", userHandler.HandleGetUsers)
 	apiv1.Get("/users/:id", userHandler.HandleGetUser)
 	apiv1.Post("/users", userHandler.HandlePostUser)
 	apiv1.Delete("/users/:id", userHandler.HandleDeleteUser)
 	apiv1.Put("/users/:id", userHandler.HandlePutUser)
 
+	// hotel handler
 	apiv1.Get("/hotels", hotelHandler.HandleGetHotels)
 	apiv1.Get("/hotels/:id/rooms", hotelHandler.HandleGetRooms)
+
+	// room handler
+	apiv1.Post("/room/:id/book", roomHandler.HandleBookRoom)
+
+	// bookings handler - admin route
+	admin.Get("/bookings", bookingHandler.HandleBookings)
+	// bookings handler - user route
+	apiv1.Get("/bookings/:id", bookingHandler.HandleBooking)
 
 	app.Listen(*listenAddr)
 }
