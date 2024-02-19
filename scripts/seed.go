@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/swarajroy/hotel-reservation/db"
+	"github.com/swarajroy/hotel-reservation/db/fixtures"
 	"github.com/swarajroy/hotel-reservation/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -91,11 +92,14 @@ func init() {
 	userStore = db.NewMongoDbUserStore(client, db.DBNAME)
 	hotelStore = db.NewMongoDbHotelStore(client, db.DBNAME)
 	roomStore = db.NewMongoDbRoomStore(client, db.DBNAME, hotelStore)
-	bookingStore = db.NewMongoDbBookinglStore(client, db.DBNAME)
+	bookingStore = db.NewMongoDbBookingStore(client, db.DBNAME)
 	store = *db.NewHotelReservationStore(userStore, hotelStore, roomStore, bookingStore)
 }
 
 func main() {
+	fixtures.AddUser(&store, "James", "Foo", "james@foo.com", "supersecurepassword", false)
+	fixtures.AddUser(&store, "Alice", "Mclain", "alice@mclain.com", "admin1234", true)
+	return
 	seedHotel("Bellucia", "France")
 	seedHotel("The cozy hotel", "The Netherlands")
 	seedHotel("Die another day", "UK")
