@@ -4,33 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/swarajroy/hotel-reservation/db"
-	"github.com/swarajroy/hotel-reservation/types"
+	"github.com/swarajroy/hotel-reservation/db/fixtures"
 )
-
-func InsertTestUser(t *testing.T, fname, lname, email, password string, store *db.HotelReservationStore, c context.Context) *types.User {
-	user, err := types.NewUserFromParams(types.CreateUserParams{
-		FirstName: fname,
-		LastName:  lname,
-		Email:     email,
-		Password:  password,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	res, err := store.User.InsertUser(c, user)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return res
-}
 
 func TestHandleAuthenticateSuccess(t *testing.T) {
 
@@ -38,15 +20,16 @@ func TestHandleAuthenticateSuccess(t *testing.T) {
 	ctx := context.TODO()
 	tdb := Setup(t, ctx)
 	defer tdb.TearDown(t, ctx)
-	insertedUser := InsertTestUser(t, "James", "Foo", "james@foo.com", "supersecurepassword", tdb.store, ctx)
+
+	insertedUser := fixtures.AddUser(tdb.store, "james", "foo", false)
 
 	app := fiber.New()
 	authHandler := NewAuthHandler(tdb.store)
 	app.Post(POST_ROUTE, authHandler.HandleAuth)
 
 	params := AuthParams{
-		Email:    insertedUser.Email,
-		Password: "supersecurepassword",
+		Email:    fmt.Sprintf("%s_%s@foo.com", insertedUser.FirstName, insertedUser.LastName),
+		Password: fmt.Sprintf("%s_%s", insertedUser.FirstName, insertedUser.LastName),
 	}
 
 	b, _ := json.Marshal(params)
@@ -80,14 +63,14 @@ func TestHandleAuthenticateFailure(t *testing.T) {
 	ctx := context.TODO()
 	tdb := Setup(t, ctx)
 	defer tdb.TearDown(t, ctx)
-	insertedUser := InsertTestUser(t, "James", "Foo", "james@foo.com", "supersecurepassword", tdb.store, ctx)
+	insertedUser := fixtures.AddUser(tdb.store, "james", "foo", false)
 
 	app := fiber.New()
 	authHandler := NewAuthHandler(tdb.store)
 	app.Post(POST_ROUTE, authHandler.HandleAuth)
 
 	params := AuthParams{
-		Email:    insertedUser.Email,
+		Email:    fmt.Sprintf("%s_%s@foo.com", insertedUser.FirstName, insertedUser.LastName),
 		Password: "notsupersecurepassword",
 	}
 

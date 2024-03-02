@@ -8,36 +8,8 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/swarajroy/hotel-reservation/db"
 	"github.com/swarajroy/hotel-reservation/types"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-type testdb struct {
-	store *db.HotelReservationStore
-}
-
-func Setup(t *testing.T, ctx context.Context) *testdb {
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(db.DB_URI))
-	if err != nil {
-		t.Fatal(err)
-	}
-	userStore := db.NewMongoDbUserStore(client, db.TEST_DB_NAME)
-	return &testdb{
-		store: &db.HotelReservationStore{
-			User: userStore,
-		},
-	}
-
-}
-
-func (tdb *testdb) TearDown(t *testing.T, ctx context.Context) {
-	if err := tdb.store.User.Drop(ctx); err != nil {
-		t.Fatal(err)
-	}
-}
 
 func TestPostUser(t *testing.T) {
 	var POST_ROUTE = "/users"
