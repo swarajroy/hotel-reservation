@@ -42,7 +42,7 @@ func (bh *BookingHandler) HandleGetBooking(c *fiber.Ctx) error {
 		return err
 	}
 
-	if booking.UserID != user.ID || !user.IsAdmin {
+	if booking.UserID != user.ID {
 		return c.Status(http.StatusUnauthorized).JSON(AuthErrorResponse{
 			Status: http.StatusUnauthorized,
 			Msg:    "error",
