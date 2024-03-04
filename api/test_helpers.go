@@ -10,8 +10,7 @@ import (
 )
 
 type testdb struct {
-	client *mongo.Client
-	store  *db.HotelReservationStore
+	store *db.HotelReservationStore
 }
 
 func Setup(t *testing.T, ctx context.Context) *testdb {
@@ -37,6 +36,18 @@ func Setup(t *testing.T, ctx context.Context) *testdb {
 
 func (tdb *testdb) TearDown(t *testing.T, ctx context.Context) {
 	if err := tdb.store.User.Drop(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tdb.store.Hotel.Drop(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tdb.store.Room.Drop(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tdb.store.Booking.Drop(ctx); err != nil {
 		t.Fatal(err)
 	}
 }

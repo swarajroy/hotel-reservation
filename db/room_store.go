@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/swarajroy/hotel-reservation/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -10,6 +11,7 @@ import (
 )
 
 type RoomStore interface {
+	Dropper
 	InsertRoom(context.Context, *types.Room) (*types.Room, error)
 	GetRooms(ctx context.Context, filter bson.M) ([]*types.Room, error)
 }
@@ -30,6 +32,11 @@ func NewMongoDbRoomStore(client *mongo.Client, dbname string, hotelStore HotelSt
 		roomColl:   client.Database(dbname).Collection(ROOM_COLL),
 		hotelStore: hotelStore,
 	}
+}
+
+func (s *MongoDbRoomStore) Drop(ctx context.Context) error {
+	fmt.Println("--- dropping room collection ---")
+	return s.roomColl.Drop(ctx)
 }
 
 func (s *MongoDbRoomStore) InsertRoom(ctx context.Context, room *types.Room) (*types.Room, error) {

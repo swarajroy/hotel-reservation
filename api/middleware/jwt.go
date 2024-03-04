@@ -10,7 +10,7 @@ import (
 	"github.com/swarajroy/hotel-reservation/db"
 )
 
-func JWTAuthentication(store db.HotelReservationStore) fiber.Handler {
+func JWTAuthentication(store *db.HotelReservationStore) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		token := c.Get("X-Api-Token")
 		if len(token) == 0 {

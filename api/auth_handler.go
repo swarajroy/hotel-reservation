@@ -46,6 +46,7 @@ func invalidCreds(c *fiber.Ctx) error {
 		Msg:    "Bad Request",
 	})
 }
+
 func (auth *AuthHandler) HandleAuth(c *fiber.Ctx) error {
 	var params AuthParams
 

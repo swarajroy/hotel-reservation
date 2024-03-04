@@ -60,7 +60,6 @@ func (s *MongoDbUserStore) DeleteUserById(ctx context.Context, id string) error 
 }
 
 func (s *MongoDbUserStore) InsertUser(ctx context.Context, user *types.User) (*types.User, error) {
-	log.Info("Enter InsertUser user = ", user)
 	res, err := s.userColl.InsertOne(ctx, user)
 	if err != nil {
 		return nil, err
