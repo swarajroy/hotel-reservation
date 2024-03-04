@@ -35,7 +35,7 @@ func main() {
 		userStore    = db.NewMongoDbUserStore(client, db.DBNAME)
 		hotelStore   = db.NewMongoDbHotelStore(client, db.DBNAME)
 		roomStore    = db.NewMongoDbRoomStore(client, db.DBNAME, hotelStore)
-		bookingStore = db.NewMongoDbBookinglStore(client, db.DBNAME)
+		bookingStore = db.NewMongoDbBookingStore(client, db.DBNAME)
 		store        = &db.HotelReservationStore{
 			User:    userStore,
 			Hotel:   hotelStore,
@@ -71,8 +71,10 @@ func main() {
 
 	// bookings handler - admin route
 	admin.Get("/bookings", bookingHandler.HandleBookings)
+	admin.Delete("/bookings/:id", bookingHandler.HandleCancelBooking)
 	// bookings handler - user route
 	apiv1.Get("/bookings/:id", bookingHandler.HandleBooking)
+	
 
 	app.Listen(*listenAddr)
 }
