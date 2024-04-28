@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/swarajroy/hotel-reservation/db"
@@ -37,6 +38,7 @@ func AddHotel(store *db.HotelReservationStore, name, loc string, rooms []primiti
 		Name:     name,
 		Location: loc,
 		Rooms:    rooms,
+		Rating:   rand.Intn(5) + 1,
 	}
 
 	insertedHotel, err := store.Hotel.InsertHotel(context.Background(), &hotel)

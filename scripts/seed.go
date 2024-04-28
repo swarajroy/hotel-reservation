@@ -57,4 +57,9 @@ func main() {
 	to := from.AddDate(0, 0, 5)
 	booking := fixtures.AddBooking(store, user.ID, room.ID, from, to, time.Time{}, 2)
 	fmt.Println(booking)
+
+	for i := 1; i <= 99; i++ {
+		fixtures.AddHotel(store, fmt.Sprintf("Hotel %d", i), fmt.Sprintf("Location %d", i), nil)
+	}
+
 }

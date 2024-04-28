@@ -7,6 +7,7 @@ import (
 	"github.com/swarajroy/hotel-reservation/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
@@ -17,7 +18,7 @@ type HotelStore interface {
 	Dropper
 	InsertHotel(context.Context, *types.Hotel) (*types.Hotel, error)
 	UpdateHotel(ctx context.Context, filter map[string]any, update map[string]any) error
-	GetHotels(ctx context.Context, filter map[string]any) ([]*types.Hotel, error)
+	GetHotels(ctx context.Context, filter map[string]any, paginaton *Pagination) ([]*types.Hotel, error)
 }
 
 type MongoDbHotelStore struct {
@@ -54,8 +55,16 @@ func (s *MongoDbHotelStore) UpdateHotel(ctx context.Context, filter map[string]a
 	return nil
 }
 
-func (s *MongoDbHotelStore) GetHotels(ctx context.Context, filter map[string]any) ([]*types.Hotel, error) {
-	resp, err := s.hotelColl.Find(ctx, filter)
+func (s *MongoDbHotelStore) GetHotels(ctx context.Context, filter map[string]any, pag *Pagination) ([]*types.Hotel, error) {
+	var (
+		skip = (pag.Page - 1) * pag.Limit
+	)
+	opts := &options.FindOptions{
+		Limit: &pag.Limit,
+		Skip:  &skip,
+	}
+
+	resp, err := s.hotelColl.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
