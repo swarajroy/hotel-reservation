@@ -27,6 +27,7 @@ type UserStore interface {
 	DeleteUserById(context.Context, string) error
 	UpdateUserById(ctx context.Context, params types.UpdateUserParams, id string) error
 	GetUserByEmail(context.Context, string) (*types.User, error)
+	ErrNoDocuments() error
 }
 
 type MongoDbUserStore struct {
@@ -64,7 +65,7 @@ func (s *MongoDbUserStore) InsertUser(ctx context.Context, user *types.User) (*t
 	if err != nil {
 		return nil, err
 	}
-	log.Info("Inserted User = ", res)
+
 	user.ID = res.InsertedID.(primitive.ObjectID)
 	return user, nil
 }
@@ -124,4 +125,8 @@ func (s *MongoDbUserStore) GetUserByEmail(c context.Context, email string) (*typ
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (s *MongoDbUserStore) ErrNoDocuments() error {
+	return mongo.ErrNoDocuments
 }

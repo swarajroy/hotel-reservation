@@ -7,7 +7,6 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/swarajroy/hotel-reservation/db"
 	"github.com/swarajroy/hotel-reservation/types"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserHandler struct {
@@ -21,13 +20,11 @@ func NewUserHandler(store *db.HotelReservationStore) *UserHandler {
 }
 
 func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
-	var (
-		id = c.Params("id")
-	)
-	user, err := h.store.User.GetUserById(c.Context(), id)
+	log.Info("id = ", c.Params("id"))
+	user, err := h.store.User.GetUserById(c.Context(), c.Params("id"))
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return c.JSON(map[string]string{"error": "not found!"})
+		if errors.Is(err, h.store.User.ErrNoDocuments()) {
+			return ErrResourceNotFound()
 		}
 		return err
 	}
@@ -48,7 +45,7 @@ func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 	log.Info("Enter HandlePostUser")
 	var params types.CreateUserParams
 	if err := c.BodyParser(&params); err != nil {
-		return err
+		return ErrBadRequest()
 	}
 
 	if errors := params.Validate(); len(errors) > 0 {
@@ -84,7 +81,7 @@ func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 	userID := c.Params("id")
 
 	if err := c.BodyParser(&params); err != nil {
-		return err
+		return ErrBadRequest()
 	}
 
 	if err := h.store.User.UpdateUserById(c.Context(), params, userID); err != nil {

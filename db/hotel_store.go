@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/swarajroy/hotel-reservation/types"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -19,6 +20,7 @@ type HotelStore interface {
 	InsertHotel(context.Context, *types.Hotel) (*types.Hotel, error)
 	UpdateHotel(ctx context.Context, filter map[string]any, update map[string]any) error
 	GetHotels(ctx context.Context, filter map[string]any, paginaton *Pagination) ([]*types.Hotel, error)
+	GetHotelById(context.Context, string) (*types.Hotel, error)
 }
 
 type MongoDbHotelStore struct {
@@ -73,4 +75,16 @@ func (s *MongoDbHotelStore) GetHotels(ctx context.Context, filter map[string]any
 		return []*types.Hotel{}, nil
 	}
 	return hotels, nil
+}
+
+func (s *MongoDbHotelStore) GetHotelById(ctx context.Context, id string) (*types.Hotel, error) {
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, NewDBError(err.Error())
+	}
+	var hotel types.Hotel
+	if err := s.hotelColl.FindOne(ctx, bson.M{"_id": oid}).Decode(&hotel); err != nil {
+		return nil, err
+	}
+	return &hotel, nil
 }

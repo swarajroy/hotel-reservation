@@ -1,10 +1,14 @@
 package api
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/swarajroy/hotel-reservation/db"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type HotelHandler struct {
@@ -14,7 +18,7 @@ type HotelHandler struct {
 type ResourceResponse struct {
 	Results int `json:"results"`
 	Data    any `json:"data"`
-	Page    int `json::"page"`
+	Page    int `json:"page"`
 }
 
 func NewHotelHandler(store *db.HotelReservationStore) *HotelHandler {
@@ -31,7 +35,7 @@ type HotelQueryParams struct {
 func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 	var params HotelQueryParams
 	if err := c.QueryParser(&params); err != nil {
-		return err
+		return ErrBadRequest()
 	}
 	filter := bson.M{
 		"rating": params.Rating,
@@ -46,6 +50,26 @@ func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 		Page:    int(params.Page),
 	}
 	return c.JSON(resp)
+}
+
+func (h *HotelHandler) HandleGetHotelById(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if len(id) == 0 {
+		fmt.Printf("supplied empty id %s", id)
+		return ErrInvalidId()
+	}
+
+	hotel, err := h.store.Hotel.GetHotelById(c.Context(), id)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(map[string]string{"error": "not found!"})
+		}
+		if len(err.(db.DBError).Err) != 0 {
+			return ErrInvalidId()
+		}
+		return err
+	}
+	return c.JSON(hotel)
 }
 
 func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {

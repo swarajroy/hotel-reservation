@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  mongo:
+    image: "mongo:latest"
+    container_name: "mongo"
+    ports:
+      - "27017:27017"
+    volumes:
+      # named volumes
+      - mongodb:/data/db
+      - mongoconfig:/data/configdb
+    networks:
+      - hotel-reservation-api
+  api:
+    image: "hotel_reservation_api:latest"
+    container_name: hotel-reservation
+    ports:
+      - "3000:3000"
+    depends_on:
+      - "mongo"
+    networks:
+      - hotel-reservation-api
+
+networks:
+  hotel-reservation-api:
+    driver: bridge
+
+volumes:
+  # default dir on Ubuntu: /var/lib/docker/volumes
+  mongodb:
+  mongoconfig:

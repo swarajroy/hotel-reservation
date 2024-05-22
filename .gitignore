@@ -24,4 +24,7 @@ go.work
 
 bin/
 
+.vscode
 .DS_Store
+
+data

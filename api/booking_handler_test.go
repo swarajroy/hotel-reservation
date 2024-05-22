@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/swarajroy/hotel-reservation/api/middleware"
 	"github.com/swarajroy/hotel-reservation/db/fixtures"
 	"github.com/swarajroy/hotel-reservation/types"
 )
@@ -28,7 +27,7 @@ func TestAdminUserGetBookingsSuccessful(t *testing.T) {
 		room           = fixtures.AddRoom(db.store, types.SINGLE, 99.99, 99.99, hotel.ID)
 		booking        = fixtures.AddBooking(db.store, user.ID, room.ID, time.Now(), time.Now().AddDate(0, 0, 5), time.Time{}, 2)
 		app            = fiber.New()
-		admin          = app.Group("/", middleware.JWTAuthentication(db.store), middleware.AdminAuth)
+		admin          = app.Group("/", JWTAuthentication(db.store), AdminAuth)
 		bookingHandler = NewBookingHandler(db.store)
 	)
 
@@ -69,7 +68,7 @@ func TestNormalUserGetBookingsFail(t *testing.T) {
 		room           = fixtures.AddRoom(db.store, types.SINGLE, 99.99, 99.99, hotel.ID)
 		booking        = fixtures.AddBooking(db.store, user.ID, room.ID, time.Now(), time.Now().AddDate(0, 0, 5), time.Time{}, 2)
 		app            = fiber.New()
-		admin          = app.Group("/", middleware.JWTAuthentication(db.store), middleware.AdminAuth)
+		admin          = app.Group("/", JWTAuthentication(db.store), AdminAuth)
 		bookingHandler = NewBookingHandler(db.store)
 	)
 
@@ -101,7 +100,7 @@ func TestNormalUserGetBookingSuccess(t *testing.T) {
 		room           = fixtures.AddRoom(db.store, types.SINGLE, 99.99, 99.99, hotel.ID)
 		booking        = fixtures.AddBooking(db.store, user.ID, room.ID, time.Now(), time.Now().AddDate(0, 0, 5), time.Time{}, 2)
 		app            = fiber.New()
-		userRoute      = app.Group("/", middleware.JWTAuthentication(db.store))
+		userRoute      = app.Group("/", JWTAuthentication(db.store))
 		bookingHandler = NewBookingHandler(db.store)
 	)
 

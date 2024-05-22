@@ -1,7 +1,8 @@
-package middleware
+package api
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -14,7 +15,7 @@ func JWTAuthentication(store *db.HotelReservationStore) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		token := c.Get("X-Api-Token")
 		if len(token) == 0 {
-			return fmt.Errorf("Unauthorized")
+			return ErrUnAuthorized()
 		}
 
 		claims, err := validateToken(token)
@@ -27,13 +28,13 @@ func JWTAuthentication(store *db.HotelReservationStore) fiber.Handler {
 		expires := int64(expiresFloat)
 
 		if time.Now().Unix() > expires {
-			return fmt.Errorf("token has expired")
+			return NewError(http.StatusUnauthorized, "token expired")
 		}
 
 		userID := claims["id"].(string)
 		user, err := store.User.GetUserById(c.Context(), userID)
 		if err != nil {
-			return fmt.Errorf("Unauthorized")
+			return ErrUnAuthorized()
 		}
 
 		//set the current authenticated user in the context
@@ -49,7 +50,7 @@ func validateToken(tokenStr string) (jwt.MapClaims, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			fmt.Println("invalid signing method", token.Header["alg"])
-			return nil, fmt.Errorf("unauthorized")
+			return nil, ErrUnAuthorized()
 		}
 		secret := os.Getenv("JWT_SECRET")
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
@@ -57,12 +58,12 @@ func validateToken(tokenStr string) (jwt.MapClaims, error) {
 	})
 	fmt.Println("parseToken = ", token)
 	if err != nil {
-		fmt.Errorf("failed to parse jwt token = %s", tokenStr)
-		return nil, fmt.Errorf("unauthorized")
+		_ = fmt.Errorf("failed to parse jwt token = %s", tokenStr)
+		return nil, ErrUnAuthorized()
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		return claims, nil
 	}
-	return nil, fmt.Errorf("unauthorized")
+	return nil, ErrUnAuthorized()
 }
