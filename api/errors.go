@@ -22,8 +22,12 @@ func ErrInvalidId() Error {
 	return NewError(http.StatusBadRequest, "Invalid ID")
 }
 
-func ErrUnAuthorized() Error {
+func ErrUnAuthenticated() Error {
 	return NewError(http.StatusUnauthorized, "Forbidden")
+}
+
+func ErrUnAuthorized() Error {
+	return NewError(http.StatusForbidden, "Forbidden")
 }
 
 func ErrBadRequest() Error {

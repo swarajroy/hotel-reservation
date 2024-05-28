@@ -106,13 +106,25 @@ func (s *MongoDbUserStore) UpdateUserById(ctx context.Context, params types.Upda
 	}
 	update := bson.D{
 		{
-			"$set", params.ToBSON(),
+			Key: "$set", Value: toBSON(params),
 		},
 	}
+
 	if _, err := s.userColl.UpdateOne(ctx, filter, update); err != nil {
 		return err
 	}
 	return nil
+}
+func toBSON(params types.UpdateUserParams) bson.M {
+	m := bson.M{}
+	if len(params.FirstName) > 0 {
+		m["firstName"] = params.FirstName
+	}
+
+	if len(params.LastName) > 0 {
+		m["lastName"] = params.LastName
+	}
+	return m
 }
 
 func (s *MongoDbUserStore) GetUserByEmail(c context.Context, email string) (*types.User, error) {

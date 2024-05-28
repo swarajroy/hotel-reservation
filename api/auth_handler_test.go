@@ -4,32 +4,81 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
+	"github.com/go-faker/faker/v4"
 	"github.com/gofiber/fiber/v2"
-	"github.com/swarajroy/hotel-reservation/db/fixtures"
+	"github.com/stretchr/testify/suite"
+	"github.com/swarajroy/hotel-reservation/db"
+	"github.com/swarajroy/hotel-reservation/db/mongo"
+	userfixtures "github.com/swarajroy/hotel-reservation/types/user_fixtures"
 )
 
-func TestHandleAuthenticateSuccess(t *testing.T) {
+type AuthHandlerSuite struct {
+	suite.Suite
+	store           *db.HotelReservationStore
+	testMongoClient *mongo.TestMongoClient
+	authHandler     *AuthHandler
+}
 
-	var POST_ROUTE = "/auth"
-	ctx := context.TODO()
-	tdb := Setup(t, ctx)
-	defer tdb.TearDown(t, ctx)
+func (suite *AuthHandlerSuite) SetupSuite() {
+	const (
+		DB_NAME = "hotel-reservation-test"
+	)
+	client, err := mongo.NewTestMongoClient(DB_NAME)
+	if err != nil {
+		suite.T().Error("failed to connect to mongo db container in docker using testcontainers")
+	}
 
-	insertedUser := fixtures.AddUser(tdb.store, "james", "foo", false)
+	suite.testMongoClient = client
+	userStore := db.NewMongoDbUserStore(suite.testMongoClient.Client, DB_NAME)
+	hotelStore := db.NewMongoDbHotelStore(suite.testMongoClient.Client, DB_NAME)
+	roomStore := db.NewMongoDbRoomStore(suite.testMongoClient.Client, DB_NAME, hotelStore)
+	bookingStore := db.NewMongoDbBookingStore(suite.testMongoClient.Client, DB_NAME)
+	store := db.NewHotelReservationStore(userStore, hotelStore, roomStore, bookingStore)
+	suite.store = store
+	suite.authHandler = NewAuthHandler(suite.store)
+}
+
+func (suite *AuthHandlerSuite) TearDownSuite() {
+	suite.testMongoClient.Container.Terminate(context.Background())
+}
+
+func (suite *AuthHandlerSuite) AfterTest() {
+	suite.store.User.Drop(context.Background())
+}
+
+func (suite *AuthHandlerSuite) TestHandleAuthenticateSuccess() {
+
+	var (
+		POST_ROUTE = "/auth"
+		fn         = faker.FirstName()
+		ln         = faker.LastName()
+		email      = faker.Email()
+		password   = faker.Password()
+		isAdmin    = false
+		ctx        = context.TODO()
+	)
+	//tdb := Setup(, ctx)
+	//defer tdb.TearDown(t, ctx)
+
+	//insertedUser := fixtures.AddUser(tdb.store, "james", "foo", false)
+	user, err := userfixtures.NextWith(fn, ln, email, password, isAdmin)
+	if err != nil {
+		suite.T().Fatalf("error generating user")
+	}
+	insertedUser, err := suite.store.User.InsertUser(ctx, user)
 
 	app := fiber.New()
-	authHandler := NewAuthHandler(tdb.store)
-	app.Post(POST_ROUTE, authHandler.HandleAuth)
+	//authHandler := NewAuthHandler(tdb.store)
+	app.Post(POST_ROUTE, suite.authHandler.HandleAuth)
 
 	params := AuthParams{
-		Email:    fmt.Sprintf("%s_%s@foo.com", insertedUser.FirstName, insertedUser.LastName),
-		Password: fmt.Sprintf("%s_%s", insertedUser.FirstName, insertedUser.LastName),
+		Email:    email,
+		Password: password,
 	}
 
 	b, _ := json.Marshal(params)
@@ -40,37 +89,52 @@ func TestHandleAuthenticateSuccess(t *testing.T) {
 	resp, _ := app.Test(req)
 
 	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected %d status got %d status", http.StatusOK, resp.StatusCode)
+		suite.T().Fatalf("expected %d status got %d status", http.StatusOK, resp.StatusCode)
 	}
 
 	var authResponse AuthResponse
 	json.NewDecoder(resp.Body).Decode(&authResponse)
 
 	if authResponse.Token == "" {
-		t.Fatalf("token expected in the response got %s", authResponse.Token)
+		suite.T().Fatalf("token expected in the response got %s", authResponse.Token)
 	}
 
 	insertedUser.EncryptedPassword = ""
 	if !reflect.DeepEqual(insertedUser, authResponse.User) {
-		t.Fatalf("expected insertedUser to be equal to authResponse User")
+		suite.T().Fatalf("expected insertedUser to be equal to authResponse User")
 	}
 
 }
 
-func TestHandleAuthenticateFailure(t *testing.T) {
+func (suite *AuthHandlerSuite) TestHandleAuthenticateFailure() {
 
-	var POST_ROUTE = "/auth"
-	ctx := context.TODO()
-	tdb := Setup(t, ctx)
-	defer tdb.TearDown(t, ctx)
-	insertedUser := fixtures.AddUser(tdb.store, "james", "foo", false)
+	var (
+		POST_ROUTE = "/auth"
+		fn         = faker.FirstName()
+		ln         = faker.LastName()
+		email      = faker.Email()
+		password   = faker.Password()
+		isAdmin    = false
+		ctx        = context.TODO()
+	)
+
+	//var POST_ROUTE = "/auth"
+	//ctx := context.TODO()
+	//tdb := Setup(suite.T(), ctx)
+	//defer tdb.TearDown(suite.T(), ctx)
+	//insertedUser := fixtures.AddUser(tdb.store, "james", "foo", false)
+	user, err := userfixtures.NextWith(fn, ln, email, password, isAdmin)
+	if err != nil {
+		suite.T().Fatalf("error generating user")
+	}
+	_, err = suite.store.User.InsertUser(ctx, user)
 
 	app := fiber.New()
-	authHandler := NewAuthHandler(tdb.store)
-	app.Post(POST_ROUTE, authHandler.HandleAuth)
+	//authHandler := NewAuthHandler(tdb.store)
+	app.Post(POST_ROUTE, suite.authHandler.HandleAuth)
 
 	params := AuthParams{
-		Email:    fmt.Sprintf("%s_%s@foo.com", insertedUser.FirstName, insertedUser.LastName),
+		Email:    email,
 		Password: "notsupersecurepassword",
 	}
 
@@ -82,13 +146,17 @@ func TestHandleAuthenticateFailure(t *testing.T) {
 	resp, _ := app.Test(req)
 
 	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("expected %d status got %d status", http.StatusBadRequest, resp.StatusCode)
+		suite.T().Fatalf("expected %d status got %d status", http.StatusBadRequest, resp.StatusCode)
 	}
 
 	var authErrorResponse AuthErrorResponse
 	json.NewDecoder(resp.Body).Decode(&authErrorResponse)
 
 	if authErrorResponse.Msg != "Bad Request" {
-		t.Fatalf("Msg expected in the response should be 'Bad Request' got %s", authErrorResponse.Msg)
+		suite.T().Fatalf("Msg expected in the response should be 'Bad Request' got %s", authErrorResponse.Msg)
 	}
+}
+
+func TestAuthHandlerSuite(t *testing.T) {
+	suite.Run(t, new(AuthHandlerSuite))
 }

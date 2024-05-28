@@ -20,9 +20,8 @@ func TestShouldFailWhenUserIsNotAnAdminSetInContext(t *testing.T) {
 
 	err := AdminAuth(c)
 
-	if err != nil {
-		assert.ErrorIs(t, err, ErrUnAuthorized())
-	}
+	assert.ErrorIs(t, err, ErrUnAuthorized())
+
 }
 
 func TestShouldFailWhenUserNotSetInContext(t *testing.T) {
@@ -32,7 +31,18 @@ func TestShouldFailWhenUserNotSetInContext(t *testing.T) {
 
 	err := AdminAuth(c)
 
-	if err != nil {
-		assert.ErrorIs(t, err, ErrUnAuthorized())
-	}
+	assert.ErrorIs(t, err, ErrUnAuthenticated())
+
+}
+
+func TestShouldPass(t *testing.T) {
+	app := fiber.New()
+
+	c := app.AcquireCtx(&fasthttp.RequestCtx{})
+
+	c.Context().SetUserValue("user", &types.User{
+		IsAdmin: true,
+	})
+
+	assert.Panics(t, func() { AdminAuth(c) })
 }
