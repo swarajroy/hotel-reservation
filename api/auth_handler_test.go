@@ -67,7 +67,7 @@ func (suite *AuthHandlerSuite) TestHandleAuthenticateSuccess() {
 	if err != nil {
 		suite.T().Fatalf("error generating user")
 	}
-	insertedUser, err := suite.store.User.InsertUser(ctx, user)
+	insertedUser, _ := suite.store.User.InsertUser(ctx, user)
 
 	app := fiber.New()
 	app.Post(POST_ROUTE, suite.authHandler.HandleAuth)

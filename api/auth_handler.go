@@ -48,7 +48,7 @@ func invalidCreds(c *fiber.Ctx) error {
 }
 
 func (auth *AuthHandler) HandleAuth(c *fiber.Ctx) error {
-	var params AuthParams
+	var params *AuthParams
 
 	if err := c.BodyParser(&params); err != nil {
 		log.Errorf("error occurred err = ", err)

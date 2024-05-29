@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/suite"
 	"github.com/swarajroy/hotel-reservation/db/fixtures"
 	"github.com/swarajroy/hotel-reservation/types"
 )
@@ -77,4 +78,12 @@ func TestGetByID(t *testing.T) {
 	if actual.ID.Hex() != expected.ID.Hex() {
 		t.Errorf("get by id failed expected %s got %s", expected.ID.Hex(), actual.ID.Hex())
 	}
+}
+
+type UserHandlerSuite struct {
+	suite.Suite
+}
+
+func TestUserHandlerSuite(t *testing.T) {
+	suite.Run(t, new(UserHandlerSuite))
 }
