@@ -78,6 +78,74 @@ func (suite *UserStoreSuite) TestUpdateUserById() {
 
 }
 
+func (suite *UserStoreSuite) TestGetUserById() {
+	var (
+		ctx = context.Background()
+	)
+	//user := nil
+	expected, err := userfixtures.Next()
+	if err != nil {
+		suite.T().Fatalf("error generating user")
+	}
+
+	insertedUser, _ := suite.userStore.InsertUser(context.Background(), expected)
+
+	retrievedUser, err := suite.userStore.GetUserById(ctx, insertedUser.ID.Hex())
+
+	suite.Nil(err)
+	suite.NotNil(retrievedUser)
+	suite.Equal(insertedUser, retrievedUser)
+}
+
+func (suite *UserStoreSuite) TestGetUsers() {
+	var (
+		ctx = context.Background()
+	)
+	expected, err := userfixtures.Next()
+	if err != nil {
+		suite.T().Fatalf("error generating user")
+	}
+
+	insertedUser, _ := suite.userStore.InsertUser(context.Background(), expected)
+	retrievedUsers, err := suite.userStore.GetUsers(ctx)
+
+	suite.Nil(err)
+	suite.NotEmpty(retrievedUsers)
+	suite.Contains(retrievedUsers, insertedUser)
+
+}
+
+func (suite *UserStoreSuite) TestGetUserByEmail() {
+	var (
+		ctx = context.Background()
+	)
+	expected, err := userfixtures.Next()
+	if err != nil {
+		suite.T().Fatalf("error generating user")
+	}
+	insertedUser, _ := suite.userStore.InsertUser(context.Background(), expected)
+	retrievedUser, err := suite.userStore.GetUserByEmail(ctx, expected.Email)
+
+	suite.Nil(err)
+	suite.NotNil(retrievedUser)
+	suite.Equal(insertedUser, retrievedUser)
+}
+
+func (suite *UserStoreSuite) TestDeleteUserById() {
+	var (
+		ctx = context.Background()
+	)
+	expected, err := userfixtures.Next()
+	if err != nil {
+		suite.T().Fatalf("error generating user")
+	}
+	insertedUser, _ := suite.userStore.InsertUser(context.Background(), expected)
+
+	err = suite.userStore.DeleteUserById(ctx, insertedUser.ID.Hex())
+
+	suite.Nil(err)
+}
+
 func TestUserStoreSuite(t *testing.T) {
 	suite.Run(t, new(UserStoreSuite))
 }

@@ -4,7 +4,7 @@ type DBError struct {
 	Err string
 }
 
-func NewDBError(err string) DBError {
+func NewResourceError(err string) error {
 	return DBError{
 		Err: err,
 	}

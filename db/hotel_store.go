@@ -80,7 +80,7 @@ func (s *MongoDbHotelStore) GetHotels(ctx context.Context, filter map[string]any
 func (s *MongoDbHotelStore) GetHotelById(ctx context.Context, id string) (*types.Hotel, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, NewDBError(err.Error())
+		return nil, NewResourceError(err.Error())
 	}
 	var hotel types.Hotel
 	if err := s.hotelColl.FindOne(ctx, bson.M{"_id": oid}).Decode(&hotel); err != nil {

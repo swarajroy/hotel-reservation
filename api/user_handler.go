@@ -1,8 +1,6 @@
 package api
 
 import (
-	"errors"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/swarajroy/hotel-reservation/db"
@@ -20,12 +18,8 @@ func NewUserHandler(store *db.HotelReservationStore) *UserHandler {
 }
 
 func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
-	log.Info("id = ", c.Params("id"))
 	user, err := h.store.User.GetUserById(c.Context(), c.Params("id"))
 	if err != nil {
-		if errors.Is(err, h.store.User.ErrNoDocuments()) {
-			return ErrResourceNotFound()
-		}
 		return err
 	}
 	return c.JSON(user)

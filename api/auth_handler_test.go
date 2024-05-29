@@ -62,10 +62,7 @@ func (suite *AuthHandlerSuite) TestHandleAuthenticateSuccess() {
 		isAdmin    = false
 		ctx        = context.TODO()
 	)
-	//tdb := Setup(, ctx)
-	//defer tdb.TearDown(t, ctx)
 
-	//insertedUser := fixtures.AddUser(tdb.store, "james", "foo", false)
 	user, err := userfixtures.NextWith(fn, ln, email, password, isAdmin)
 	if err != nil {
 		suite.T().Fatalf("error generating user")
@@ -73,7 +70,6 @@ func (suite *AuthHandlerSuite) TestHandleAuthenticateSuccess() {
 	insertedUser, err := suite.store.User.InsertUser(ctx, user)
 
 	app := fiber.New()
-	//authHandler := NewAuthHandler(tdb.store)
 	app.Post(POST_ROUTE, suite.authHandler.HandleAuth)
 
 	params := AuthParams{
@@ -118,24 +114,21 @@ func (suite *AuthHandlerSuite) TestHandleAuthenticateFailure() {
 		ctx        = context.TODO()
 	)
 
-	//var POST_ROUTE = "/auth"
-	//ctx := context.TODO()
-	//tdb := Setup(suite.T(), ctx)
-	//defer tdb.TearDown(suite.T(), ctx)
-	//insertedUser := fixtures.AddUser(tdb.store, "james", "foo", false)
 	user, err := userfixtures.NextWith(fn, ln, email, password, isAdmin)
 	if err != nil {
 		suite.T().Fatalf("error generating user")
 	}
 	_, err = suite.store.User.InsertUser(ctx, user)
+	if err != nil {
+		suite.T().Errorf("err occured while inserting user %s", err.Error())
+	}
 
 	app := fiber.New()
-	//authHandler := NewAuthHandler(tdb.store)
 	app.Post(POST_ROUTE, suite.authHandler.HandleAuth)
 
 	params := AuthParams{
 		Email:    email,
-		Password: "notsupersecurepassword",
+		Password: faker.Password(),
 	}
 
 	b, _ := json.Marshal(params)
@@ -150,7 +143,10 @@ func (suite *AuthHandlerSuite) TestHandleAuthenticateFailure() {
 	}
 
 	var authErrorResponse AuthErrorResponse
-	json.NewDecoder(resp.Body).Decode(&authErrorResponse)
+	err = json.NewDecoder(resp.Body).Decode(&authErrorResponse)
+	if err != nil {
+		suite.T().Fatalf("decoding the auth error response failed")
+	}
 
 	if authErrorResponse.Msg != "Bad Request" {
 		suite.T().Fatalf("Msg expected in the response should be 'Bad Request' got %s", authErrorResponse.Msg)

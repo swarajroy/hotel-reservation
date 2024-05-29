@@ -6,7 +6,10 @@ import (
 	"log"
 	"time"
 
+	"github.com/armory-io/go-commons/awaitility"
+	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -52,12 +55,13 @@ func createMongoContainer(ctx context.Context, dbName string) (testcontainers.Co
 		//"MONGO_INITDB_ROOT_PASSWORD": "pass",
 		"MONGO_INITDB_DATABASE": dbName,
 	}
-	var port = "27017/tcp"
+	var port nat.Port = "27017/tcp"
 
 	req := testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image:        "mongo",
-			ExposedPorts: []string{port},
+			ExposedPorts: []string{port.Port()},
+			WaitingFor:   wait.ForListeningPort(port),
 			Env:          env,
 		},
 		Started: true,
@@ -66,8 +70,15 @@ func createMongoContainer(ctx context.Context, dbName string) (testcontainers.Co
 	if err != nil {
 		return container, nil, "", fmt.Errorf("failed to start container: %v", err)
 	}
+	//defer container.Terminate(ctx) // not required as we are terminating the conatiner in the lifecycle method of testify when the container
+	//gets used in integration tests
 
-	p, err := container.MappedPort(ctx, "27017")
+	var p nat.Port
+	err = awaitility.AwaitDefault(func() bool {
+		p, err = container.MappedPort(ctx, port)
+		return err == nil
+	})
+
 	if err != nil {
 		return container, nil, "", fmt.Errorf("failed to get container external port: %v", err)
 	}
