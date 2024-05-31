@@ -20,8 +20,7 @@ func JWTAuthentication(store *db.HotelReservationStore) fiber.Handler {
 
 		claims, err := validateToken(token)
 		if err != nil {
-			fmt.Println("error = ")
-			return err
+			return fmt.Errorf("error = %s", err.Error())
 		}
 
 		expiresFloat := claims["expires"].(float64)
