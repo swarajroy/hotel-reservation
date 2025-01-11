@@ -1,6 +1,6 @@
 module github.com/swarajroy/hotel-reservation
 
-go 1.21.1
+go 1.23.4
 
 require (
 	github.com/go-faker/faker/v4 v4.4.1
