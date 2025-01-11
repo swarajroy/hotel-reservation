@@ -27,9 +27,6 @@ jobs:
         with:
           version-type: patch
 
-      - name: Get the New Version
-        run: echo "New version is ${{ steps.increment-git-tag.outputs.new-version }}"
-
       - name: Build, Tag, and Push the Image to Amazon ECR
         id: build-image
         env:
