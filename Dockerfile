@@ -1,4 +1,4 @@
-FROM golang:1.17-buster AS builder
+FROM golang:1.23.4-bookworm AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
