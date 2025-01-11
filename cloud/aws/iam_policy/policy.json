@@ -19,7 +19,7 @@
         "ecr:UploadLayerPart"
       ],
       "Resource": [
-        "arn:aws:ecr:eu-west-1:{yourIAMRoleAccountNumber}:repository/golang/hotel-reservation-api"
+        "arn:aws:ecr:{yourChosenRegion}:{yourIAMRoleAccountNumber}:repository/golang/hotel-reservation-api"
       ]
     }
   ]

@@ -21,9 +21,6 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Output the amazon ecr registry
-        run: echo "The registry is ${{steps.login-ecr.outputs.registry}}"
-
       - name: Automatic Tagging of Releases
         id: increment-git-tag
         uses: swarajroy/increment-git-tag@v1
@@ -40,6 +37,5 @@ jobs:
           ECR_REPOSITORY: golang/hotel-reservation-api
           IMAGE_TAG: ${{ steps.increment-git-tag.outputs.new-version }}
         run: |
-          echo "The git tag is ${{ steps.increment-git-tag.outputs.new-version }}"
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
