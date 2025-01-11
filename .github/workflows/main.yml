@@ -21,6 +21,9 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Output the amazon ecr registry
+        run: echo "The registry is ${{steps.login-ecr.outputs.registry}}"
+
       - name: Automatic Tagging of Releases
         id: increment-git-tag
         uses: swarajroy/increment-git-tag@v1
